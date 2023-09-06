@@ -1,5 +1,6 @@
 # Schemes evinced by GADs
-Hello,
+Hello, and welcome to our repository!
+
 Here you find the functions needed for computing the schemes evinced by generalized additive decompositions (GADs).
 
  -- Still in preparation! --
