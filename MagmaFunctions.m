@@ -1,3 +1,6 @@
+// load "/home/dtaufer/Scrivania/Tensor/Conti/WorkingFunctions/FastApolarity.txt";
+
+
 // ------------------------
 // Circ action - Derivation
 // ------------------------
@@ -84,9 +87,11 @@ end function;
 // ---------------
 
 
-function Hankel( _F )
+function Hankel( _F : Efficient := false )
 // It returns the Hankel matrix of an homogeneous form F of positive degree.
 // Note: the matrix is transposed with respect to paper's notation, since Magma computes left kernels by default.
+// If efficient is set True, it returns the smaller square matrix when it recognizes that the given F is a power.
+// ---> it is more efficient, but the matrix may be too small if F is a pure power in an algebraic closure, but not on the base field.
 	local R,n,Fdp,f,d,mons;
 	R := Parent(_F);
 	n := Rank(R);
@@ -94,11 +99,15 @@ function Hankel( _F )
 	f := Evaluate(Fdp, [1] cat [ R.i : i in [2..n]]);
 	d := Degree( f );
 	mons := [ Evaluate(_m, [1] cat [ R.i : i in [2..Rank(R)]]) : _m in MonomialsOfDegree(Parent(_F),d) ];
-	F1 := Evaluate(_F, [1] cat [ R.i : i in [2..n]]); // <- Test if we can use the square Hankel
-	if IsPower( F1, Degree(F1) ) then
-		return Matrix( Binomial(n+d, d+1), Binomial(n+d-1, d), [MonomialCoefficient(f,ma*mb) : ma,mb in mons] cat [0 : i in [1..Integers()!(Binomial(n+d-1, d)^2*(n-1)/(d+1))]] );
+	if Efficient then
+		F1 := Evaluate(_F, [1] cat [ R.i : i in [2..n]]); // <- Test if we can use the square Hankel
+		if Degree(F1) le 0 or IsPower( F1, Degree(F1) ) then // <- Note that this function depends on the base field! E.g. IsPower(2*x^2,2) = false over Q
+			return Matrix( Binomial(n+d, d+1), Binomial(n+d-1, d), [MonomialCoefficient(f,ma*mb) : ma,mb in mons] cat [0 : i in [1..Integers()!(Binomial(n+d-1, d)^2*(n-1)/(d+1))]] );
+		else
+			return Matrix( Binomial(n+d-1, d), [MonomialCoefficient(f,ma*mb) : ma,mb in mons] );
+		end if;
 	else
-		return Matrix( Binomial(n+d-1, d), [MonomialCoefficient(f,ma*mb) : ma,mb in mons] );
+		return Matrix( Binomial(n+d, d+1), Binomial(n+d-1, d), [MonomialCoefficient(f,ma*mb) : ma,mb in mons] cat [0 : i in [1..Integers()!(Binomial(n+d-1, d)^2*(n-1)/(d+1))]] );
 	end if;
 end function;
 
