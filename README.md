@@ -9,7 +9,7 @@ You can find the preprint of the corresponding paper at [ArXiv].
 - PaperExamples.m: Examples from the paper.
 - Macaulay2 functions: in preparation.
 
-# Authors:
+# Authors
 Alessandra Bernardi (alessandra.bernardi@unitn.it),
 
 Alessandro Oneto (alessandro.oneto@unitn.it),
