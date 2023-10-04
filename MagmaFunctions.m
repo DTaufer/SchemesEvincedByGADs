@@ -113,7 +113,7 @@ end function;
 
 function HankelKer(_F)
 // It returns the homogeneous kernel of the Hankel operator defined by F
-	local R, Ra, mons, H, gens, Ih;
+	local R,Ra,mons,H,gens,Ih,hR;
 	R := Parent(_F);	
 	Ra := PolynomialRing( BaseRing(R), Rank(R)-1 );
 	mons := &cat( [SetToSequence(MonomialsOfDegree(Ra,i)) : i in [0..Degree(_F)+1]] );
