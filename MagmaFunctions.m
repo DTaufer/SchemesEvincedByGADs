@@ -111,36 +111,17 @@ function Hankel( _F : Efficient := false )
 	end if;
 end function;
 
-function Homogenize( _f, _Rh, _d )
-// It returns f homogenized with respect to the first variable of Rh in degree d
-	local X;
-	if Degree(_f) gt _d then
-		"WARNING: Homogenizing:", _f;
-		"In degree:", _d;
-		return 0;
-	end if;
-	X := MonomialsOfDegree(_Rh,1)[1];
-	return &+[ hom<Parent(_f)->_Rh|SetToSequence(MonomialsOfDegree(_Rh,1)[1+Rank(_Rh)-Rank(Parent(_f))..Rank(_Rh)])>(m)*X^(_d - Degree(m)) : m in Terms(_f)];
-end function;
-
-function HomIdeal( _I, _R )
-// It returns the ideal I homogenized with respect to the first variable of R
-	local _grI, _GB;
-	_grI := ChangeOrder(_I,"glex");
-	_GB := GroebnerBasis(_grI);
-	return ideal< _R | [ Homogenize(g,_R,Degree(g)) : g in _GB ] >;
-end function;
-
 function HankelKer(_F)
 // It returns the homogeneous kernel of the Hankel operator defined by F
-	local R, n, mons, H, gens, I;	
-	R := Parent(_F);
-	n := Rank(R);
-	mons := MonomialsOfDegree(R, Degree(_F)+1);
+	local R, Ra, mons, H, gens, Ih;
+	R := Parent(_F);	
+	Ra := PolynomialRing( BaseRing(R), Rank(R)-1 );
+	mons := &cat( [SetToSequence(MonomialsOfDegree(Ra,i)) : i in [0..Degree(_F)+1]] );
 	H := Hankel(_F);
-	gens := [ &+[v[i]*Evaluate(mons[i],[1] cat SetToSequence(MonomialsOfDegree(R,1)[2..n])) : i in [1..#ElementToSequence(v)]] : v in Basis(Kernel(H))];
-	I := ideal<R|gens>;
-	return HomIdeal( I, R );
+	gens := [ &+[v[i]*mons[i] : i in [1..#ElementToSequence(v)]] : v in Basis(Kernel(H))];
+	Ih := Homogenization(ideal<Ra|gens>);
+	hR := hom< Parent(Generators(Ih)[1]) -> R | SetToSequence(MonomialsOfDegree(R,1))>;
+	return ideal<R|[ hR(_G) : _G in Generators(Ih)]>;
 end function;
 
 
