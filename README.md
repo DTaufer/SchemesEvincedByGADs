@@ -7,7 +7,7 @@ You can find the preprint of the corresponding paper at https://doi.org/10.48550
 # Files
 - MagmaFunctions.m: Magma implementation of the basic apolarity functions, the natural apolar schemes, and the schemes evinced by GADs.
 - PaperExamples.m: Examples from the paper.
-- NaturalApolarSchemes.m2: m2 functions and paper examples.
+- NaturalApolarSchemes.m2: Macaulay2 functions and paper examples.
 
 # Authors
 Alessandra Bernardi (alessandra.bernardi@unitn.it),
