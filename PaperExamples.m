@@ -67,16 +67,29 @@ F eq F1 - F2;
 
 // First piece
 F1tilde := Evaluate(4*F1,[y,x-2*z,z]);
-Transpose( Hankel( F1tilde : Efficient := true ) );
+Transpose( Hankel( StandardPowers(F1tilde) : Efficient := true ) );
 
-HankelKer(F1tilde) eq ideal<R | [8*y+z,z^2]>;
-I := ideal<R | [ Evaluate(_g,[y,x,-2*y+z]) : _g in Generators(HankelKer(F1tilde)) ]>;
-I eq NaturalApolarScheme(F1,L1);
+HankelKer(StandardPowers(F1tilde)) eq ideal<R | [8*y+z,z^2]>;
+I1 := ideal<R | [ Evaluate(_g,[y,x,-2*y+z]) : _g in Generators(HankelKer(F1tilde)) ]>;
+I1 eq NaturalApolarScheme(F1,L1);
 
-Radical(I) eq ideal<R | [x,2*y-z]>;
-Dimension(I) eq 1;
-HilbertSeries(I,3);
-I subset AnnH(F1);
+Radical(I1) eq ideal<R | [x,2*y-z]>;
+Dimension(I1) eq 1;
+HilbertSeries(I1,3);
+I1 subset AnnH(F1);
+
+// Second piece
+F2tilde := Evaluate(4*F2,[y,x,z]);
+Transpose( Hankel( StandardPowers(F2tilde) : Efficient := true ) );
+
+HankelKer(StandardPowers(F2tilde)) eq ideal<R | [2*y+z,z^2]>;
+I2 := ideal<R | [ Evaluate(_g,[y,x,z]) : _g in Generators(HankelKer(F2tilde)) ]>;
+I2 eq NaturalApolarScheme(F2,L2);
+
+Radical(I2) eq ideal<R | [x,z]>;
+Dimension(I2) eq 1;
+HilbertSeries(I2,3);
+I2 subset AnnH(F2);
 
 
 // -----------
