@@ -4,7 +4,7 @@
 ---- This is the ancillary file of the paper
 ---- ON SCHEMES EVINCED BY GENERALIZED ADDITIVE DECOMPOSITIONS AND THEIR REGULARITY
 ---- by A. Bernardi, A. Oneto, D. Taufer
----- v. 2023/10
+---- v. 2024/04
 ------------------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------------------
@@ -44,8 +44,8 @@ naturalApolarScheme (List,List) := (F,L) -> (
 isApolar = method();
 isApolar (Ideal,RingElement) := (I,F) -> (
     if not(ring(I) === ring(F)) then error "the form and the ideal have to be from the same ring";
-    if not(X == saturate(X)) then error "the ideal is not saturated";
-    if not(dim(X) == 1) then error "the ideal does not define a 0-dim scheme";
+    if not(I == saturate(I)) then error "the ideal is not saturated";
+    if not(dim(I) == 1) then error "the ideal does not define a 0-dim scheme";
     G := flatten entries gens I;
     return all(G,g -> diff(g,F) == 0)
     )
@@ -91,6 +91,31 @@ Z' = naturalApolarScheme({x_0^2*G1',x_1^2*G2'},{x_0,x_1})
 
 isApolar(Z,F), degree Z, primaryDecomposition radical Z
 isApolar(Z',F), degree Z', primaryDecomposition radical Z'
+
+------------------------------------------------------------------------------------------
+---- Example 4.6
+------------------------------------------------------------------------------------------
+S = QQ[x_0..x_5];
+F = 60*x_2^3 + 60*x_2^2*x_3 + 10*x_1^2*x_0 + 70*x_2^2*x_0 + 360*x_2*x_3*x_0 + 60*x_3^2*x_0 + 120*x_2*x_4*x_0 + 70*x_1*x_0^2 + 75*x_2*x_0^2 + 70*x_3*x_0^2 + 180*x_4*x_0^2 + 10*x_5*x_0^2 + 24*x_0^3;
+Z = ideal(x_5^2, x_4*x_5, x_3*x_5, x_2*x_5, x_1*x_5, x_4^2, x_3*x_4, x_2*x_4 - 6*x_0*x_5, x_1*x_4, x_3^2 - 6*x_0*x_5, x_2*x_3 - x_0*x_4, x_1*x_3, x_2^2 - x_0*x_3, x_1*x_2, x_1^2 - x_0*x_5)
+
+isApolar(Z,F), dim Z, degree Z, radical Z
+
+-- Z is the unique apolar scheme of minimal length because it coincides with the truncation of the annihilator ideal of F in degree 2
+-- and all length 6 schemes should be equal to the annihilator ideal of F up to degree 2 because the Hilbert function is 1 6 6 1 -
+for i to 6 list hilbertFunction(i,inverseSystem(F))
+I = ideal select(first entries gens inverseSystem(F), f -> first degree(f) <= 2)
+I == Z
+
+-- Z is the natural apolar scheme of a degree-4 polynomial
+G = 6*x_0^4 + 70/3*x_0^3*x_1 + 25*x_0^3*x_2 + 70/3*x_0^3*x_3 + 60*x_0^3*x_4 + 10/3*x_0^3*x_5 + 5*x_0^2*x_1^2 + 35*x_0^2*x_2^2 + 180*x_0^2*x_2*x_3 + 60*x_0^2*x_2*x_4 + 30*x_0^2*x_3^2 + 60*x_0*x_2^3 + 60*x_0*x_2^2*x_3 + 5*x_2^4; 
+diff(x_0,G) == F
+Z == naturalApolarScheme(G,x_0)
+
+-- 
+use S
+contract(x_2^2-x_3,sub(toDividedPowers(G),{x_0=>1}))
+contract(x_2^2-x_3,sub(toDividedPowers(F),{x_0=>1}))
 
 ------------------------------------------------------------------------------------------
 ---- Example 5.8, 5.12
