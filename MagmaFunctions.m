@@ -87,21 +87,21 @@ end function;
 // ---------------
 
 
-function Hankel( _F : Efficient := false )
+function Hankel( _F : small := false )
 // It returns the Hankel matrix of an homogeneous form F of positive degree.
 // Note: the matrix is transposed with respect to paper's notation, since Magma computes left kernels by default.
-// If efficient is set True, it returns the smaller square matrix when it recognizes that the given F is a power.
-// ---> it is more efficient, but the matrix may be too small if F is a pure power in an algebraic closure, but not on the base field.
-	local R,n,Fdp,f,d,mons;
+// If small is set true, it returns the smaller square matrix when it recognizes that the given F is not equal to L^k*x0^(d-k), for some linear form L.
+	local R,n,Fdp,f,d,mons,F1,fact;
 	R := Parent(_F);
 	n := Rank(R);
 	Fdp := DividedPowers(_F);
 	f := Evaluate(Fdp, [1] cat [ R.i : i in [2..n]]);
 	d := Degree( f );
 	mons := [ Evaluate(_m, [1] cat [ R.i : i in [2..Rank(R)]]) : _m in MonomialsOfDegree(Parent(_F),d) ];
-	if Efficient then
+	if small then
 		F1 := Evaluate(_F, [1] cat [ R.i : i in [2..n]]); // <- Test if we can use the square Hankel
-		if Degree(F1) le 0 or IsPower( F1, Degree(F1) ) then // <- Note that this function depends on the base field! E.g. IsPower(2*x^2,2) = false over Q
+		fact := Factorization(F1); // <- The function IsPower would be more efficient, but it depends on the base field! E.g. IsPower(2*x^2,2) = false over Q
+		if Degree(F1) le 0 or ( #fact eq 1 and Degree(fact[1][1]) eq 1 ) then 
 			return Matrix( Binomial(n+d, d+1), Binomial(n+d-1, d), [MonomialCoefficient(f,ma*mb) : ma,mb in mons] cat [0 : i in [1..Integers()!(Binomial(n+d-1, d)^2*(n-1)/(d+1))]] );
 		else
 			return Matrix( Binomial(n+d-1, d), [MonomialCoefficient(f,ma*mb) : ma,mb in mons] );
@@ -111,13 +111,14 @@ function Hankel( _F : Efficient := false )
 	end if;
 end function;
 
-function HankelKer(_F)
+function HankelKer(_F : efficient := false)
 // It returns the homogeneous kernel of the Hankel operator defined by F
+// If efficient is set true, it tries to use smaller Hankel matrices. This is slightly more efficient for large number of variables and degree of F
 	local R,Ra,mons,H,gens,Ih,hR;
 	R := Parent(_F);	
 	Ra := PolynomialRing( BaseRing(R), Rank(R)-1 );
 	mons := &cat( [SetToSequence(MonomialsOfDegree(Ra,i)) : i in [0..Degree(_F)+1]] );
-	H := Hankel(_F);
+	H := Hankel(_F : small := efficient);
 	gens := [ &+[v[i]*mons[i] : i in [1..#ElementToSequence(v)]] : v in Basis(Kernel(H))];
 	Ih := Homogenization(ideal<Ra|gens>);
 	hR := hom< Parent(Generators(Ih)[1]) -> R | SetToSequence(MonomialsOfDegree(R,1))>;
