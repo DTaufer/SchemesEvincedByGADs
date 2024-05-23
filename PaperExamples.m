@@ -1,27 +1,27 @@
-// First, load the functions from the other file (MagmaFunctions.m)
+// First, load the functions from the other file!
 
-// Remark:	To remove annoying indices, we identify R and S with k[x,y,z,u,v,w,...].
+// Remark: 	To remove annoying indices, we identify R and S with k[x,y,z,u,v,w,...].
 // 		This way, the polynomial x*y acts on x^2*y*z, and the result is 2*x*z.
 
 // Summary:
-// 	- Examples 3.8, 3.9, 3.10: learning examples.
+// 	- Examples 3.10, 3.11, 3.12: learning examples.
 // 	- Example 4.4: redundant GAD.
 // 	- Example 4.6: long scheme (outside (d+1)-fat points).
 // 	- Example 5.8: irredundant but irregular scheme.
 // 	- Example 5.10: shortening tangential decompositions.
-// 	- Example 5.12: better GAD for Ex.5.8, ensuring regularity.
+// 	- Example 5.13: better GAD for Ex.5.8, ensuring regularity.
 
 
-// -----------
-// Example 3.8
-// -----------
+// ------------
+// Example 3.10
+// ------------
 
 R<x,y,z> := PolynomialRing(Rationals(),3);
 F := (x + 3*y - 2*z)*(y + z)*z;
 L := x + 3*y - 2*z;
 
 Ftilde := Evaluate(F,[x-3*y+2*z,y,z]);
-Hankel( Ftilde : Efficient := true );
+Hankel( Ftilde );
 
 HankelKer(Ftilde) eq ideal<R | [z*(2*y-z),y^2]>;
 I := ideal<R | [ Evaluate(_g,[x,-3*x+y,2*x+z]) : _g in Generators(HankelKer(Ftilde)) ]>;
@@ -32,29 +32,37 @@ Dimension(I) eq 1; // projective dimension
 HilbertSeries(I,4);
 I subset AnnH(F);
 
+I eq ideal<R|[(2*x+z)*(8*x-2*y+z),(3*x-y)^2]>;
 
-// -----------
-// Example 3.9
-// -----------
+
+// ------------
+// Example 3.11
+// ------------
 
 R<x,y,z> := PolynomialRing(Rationals(),3);
 F := (x + 3*y - 2*z)*(y + z)*z;
 L := x;
 
-Hankel( F : Efficient := true );
+Hankel( F );
 
-HankelKer(F) eq HomIdeal( ideal<R | [5*z^3 + 76*y^2 - 12*y*z + 36*z^2, 2*y^2*z + z^3, y^3, 6*y*z^2 + z^3]>, R);
+Ibar := ideal<R | [5*z^3 + 76*y^2 - 12*y*z + 36*z^2, 2*y^2*z + z^3, y^3, 6*y*z^2 + z^3]>; // Ann(f)
+{ Contract(g,Evaluate(DividedPowers(F),[1,y,z])) : g in Generators(Ibar) } eq {0};
+
+HankelKer(F) eq NaturalApolarScheme(F,L);
 I := HankelKer(F);
-I eq NaturalApolarScheme(F,L);
+
+ideal< R | [Evaluate(g,[1,y,z]) : g in Basis(I)] > eq Ibar;
 
 Radical(I) eq ideal<R | [y,z]>;
 Dimension(I) eq 1;
 HilbertSeries(I,4);
 I subset AnnH(F);
 
+I eq ideal<R|[76*x*y^2 - 12*x*y*z + 36*x*z^2 + 5*z^3, y^3, 2*y^2*z + z^3, 6*y*z^2 + z^3]>;
+
 
 // ------------
-// Example 3.10
+// Example 3.12
 // ------------
 
 R<x,y,z> := PolynomialRing(Rationals(),3);
@@ -67,7 +75,7 @@ F eq F1 - F2;
 
 // First piece
 F1tilde := Evaluate(4*F1,[y,x-2*z,z]);
-Transpose( Hankel( StandardPowers(F1tilde) : Efficient := true ) );
+Transpose( Hankel( StandardPowers(F1tilde) ) );
 
 HankelKer(StandardPowers(F1tilde)) eq ideal<R | [8*y+z,z^2]>;
 I1 := ideal<R | [ Evaluate(_g,[y,x,-2*y+z]) : _g in Generators(HankelKer(F1tilde)) ]>;
@@ -80,7 +88,7 @@ I1 subset AnnH(F1);
 
 // Second piece
 F2tilde := Evaluate(4*F2,[y,x,z]);
-Transpose( Hankel( StandardPowers(F2tilde) : Efficient := true ) );
+Transpose( Hankel( StandardPowers(F2tilde) ) );
 
 HankelKer(StandardPowers(F2tilde)) eq ideal<R | [2*y+z,z^2]>;
 I2 := ideal<R | [ Evaluate(_g,[y,x,z]) : _g in Generators(HankelKer(F2tilde)) ]>;
@@ -90,6 +98,10 @@ Radical(I2) eq ideal<R | [x,z]>;
 Dimension(I2) eq 1;
 HilbertSeries(I2,3);
 I2 subset AnnH(F2);
+
+I := SchemeEvincedByGAD([L1,L2],[x+3*y-2*z,x+3*y-2*z],3);
+I eq I1 meet I2;
+I eq ideal<R|[4*x*y-10*x*z+2*y*z-z^2,x^2]>;
 
 
 // -----------
@@ -122,6 +134,14 @@ R<x,y> := PolynomialRing(Rm7,2);
 G1 := 4*x^2 + 2*x*y - 4*y^2;
 G2 := -3*x - 5*y;
 F := x*( G1 ) + y^2*( G2 ); 
+
+SchemeEvincedByGAD([x,y],[G1,G2],3) eq ideal<R|[x^2*y^3]>;
+
+G1b := 4*x + 2*y;
+G2b := -7*x - 5*y;
+F eq x^2*( G1b ) + y^2*( G2b );
+
+SchemeEvincedByGAD([x,y],[G1b,G2b],3) eq ideal<R|[x^2*y^2]>;
 
 Iw := ideal<R | [79*x^2 - 166*x*y + 88*y^2]>;
 Iw subset AnnH(F);
@@ -266,7 +286,7 @@ not I subset I3;
 
 
 // ------------
-// Example 5.12
+// Example 5.13
 // ------------
 
 R<x,y,z> := PolynomialRing(Rationals(),3);
