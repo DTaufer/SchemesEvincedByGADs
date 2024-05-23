@@ -1,6 +1,3 @@
-// load "/home/dtaufer/Scrivania/Tensor/Conti/WorkingFunctions/FastApolarity.txt";
-
-
 // ------------------------
 // Circ action - Derivation
 // ------------------------
@@ -82,38 +79,77 @@ function AnnH(_F)
 end function;
 
 
+// ---------------------
+// Ideal homogeneization
+// ---------------------
+
+// These functions are needed to fix the weird Magma Homogeneization function, which does not seem to work as expected.
+// This has already been pointed out to Magma developers.
+
+function Homogenize( _f, _Rh)
+// It returns f casted in the last variables of Rh and homogenized with respect to the first variable of Rh
+	local rf,rR,x0,d;
+	rf := Rank(Parent(_f));
+	rR := Rank(_Rh);
+	if rf ge rR then "Error: trying to homogenize", _f, "in", _Rh;  return 0; end if;
+	x0 := _Rh.1;
+	d := Degree(_f);
+	return &+[ hom<Parent(_f)->_Rh|SetToSequence(MonomialsOfDegree(_Rh,1)[1+rR-rf..rR])>(m)*x0^(d - Degree(m)) : m in Terms(_f)];
+end function;
+
+function HomIdeal( _I, _R )
+// It returns the ideal I homogenized with respect to the first variable of R
+	local _grI, _GB;
+	_grI := ChangeOrder(_I,"glex");
+	_GB := GroebnerBasis(_grI);
+	return ideal< _R | [ Homogenize(g,_R) : g in _GB ] >;
+end function;
+
+function Homogenization( _I )
+// It replaces the Magma Homogenization function
+	local R,n,RH;
+	R := Parent(Generators(_I)[1]);
+	n := Rank(R);
+	RH := PolynomialRing(BaseRing(R),n+1);
+	AssignNames(~RH, ["H"]);
+	return HomIdeal(_I,RH);
+end function;
+
+
 // ---------------
 // Hankel & Ann(f)
 // ---------------
 
 
-function Hankel( _F : small := false )
-// It returns the Hankel matrix of an homogeneous form F of positive degree.
+function Hankel(_F : small := true)
+// It returns the Hankel matrix of an homogeneous form F.
 // Note: the matrix is transposed with respect to paper's notation, since Magma computes left kernels by default.
-// If small is set true, it returns the smaller square matrix when it recognizes that the given F is not equal to L^k*x0^(d-k), for some linear form L.
-	local R,n,Fdp,f,d,mons,F1,fact;
+// By default (small = true), it returns the smaller square matrix when its kernel is generated in degree deg(F).
+// If small is set to false, it always returns the rectangular Hankel.
+	local R,n,f,d,mons,F1,fact;
 	R := Parent(_F);
 	n := Rank(R);
-	Fdp := DividedPowers(_F);
-	f := Evaluate(Fdp, [1] cat [ R.i : i in [2..n]]);
+	f := Evaluate(DividedPowers(_F), [1] cat [ R.i : i in [2..n]]);
 	d := Degree( f );
 	mons := [ Evaluate(_m, [1] cat [ R.i : i in [2..Rank(R)]]) : _m in MonomialsOfDegree(Parent(_F),d) ];
+	size := Binomial(n+d-1, d);
+	M := Matrix( size, [MonomialCoefficient(f,ma*mb) : ma,mb in mons] );
 	if small then
-		F1 := Evaluate(_F, [1] cat [ R.i : i in [2..n]]); // <- Test if we can use the square Hankel
-		fact := Factorization(F1); // <- The function IsPower would be more efficient, but it depends on the base field! E.g. IsPower(2*x^2,2) = false over Q
-		if Degree(F1) le 0 or ( #fact eq 1 and Degree(fact[1][1]) eq 1 ) then 
-			return Matrix( Binomial(n+d, d+1), Binomial(n+d-1, d), [MonomialCoefficient(f,ma*mb) : ma,mb in mons] cat [0 : i in [1..Integers()!(Binomial(n+d-1, d)^2*(n-1)/(d+1))]] );
+		if d le 0 or Rank(RowSubmatrixRange(M,2,n)) eq 1 then	
+			sizerect := Binomial(n+d, d+1);
+			return VerticalJoin(M, ZeroMatrix(BaseRing(R), sizerect-size, size));
 		else
-			return Matrix( Binomial(n+d-1, d), [MonomialCoefficient(f,ma*mb) : ma,mb in mons] );
+			return M;
 		end if;
 	else
-		return Matrix( Binomial(n+d, d+1), Binomial(n+d-1, d), [MonomialCoefficient(f,ma*mb) : ma,mb in mons] cat [0 : i in [1..Integers()!(Binomial(n+d-1, d)^2*(n-1)/(d+1))]] );
+		sizerect := Binomial(n+d, d+1);
+		return VerticalJoin(M, ZeroMatrix(BaseRing(R), sizerect-size, size));
 	end if;
 end function;
 
-function HankelKer(_F : efficient := false)
-// It returns the homogeneous kernel of the Hankel operator defined by F
-// If efficient is set true, it tries to use smaller Hankel matrices. This is slightly more efficient for large number of variables and degree of F
+function HankelKer(_F : efficient := true)
+// It returns the homogeneous kernel of the Hankel operator defined by F.
+// By default (efficient = true), it tries to use small&square Hankel matrices (when possible). This is usually more efficient.
 	local R,Ra,mons,H,gens,Ih,hR;
 	R := Parent(_F);	
 	Ra := PolynomialRing( BaseRing(R), Rank(R)-1 );
