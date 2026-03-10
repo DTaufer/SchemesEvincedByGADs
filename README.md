@@ -2,7 +2,8 @@
 Hello, and welcome to our repository!
 
 Here you find the functions needed for computing the schemes evinced by generalized additive decompositions (GADs).
-You can find the preprint of the corresponding paper at https://doi.org/10.48550/arXiv.2309.12961.
+
+You can find the preprint of the corresponding paper at https://doi.org/10.48550/arXiv.2309.12961, while the published version at https://doi.org/10.1016/j.matpur.2024.06.007.
 
 # Files
 - MagmaFunctions.m: Magma implementation of the basic apolarity functions, the natural apolar schemes, and the schemes evinced by GADs.
